@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Background Remover</title>
+    <style>
+        .loading {
+            display: none;
+            text-align: center;
+        }
+        #downloadButton {
+            display: none;
+        }
+        #canvasContainer {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <img src="https://sportphotobooth.nl/wp-content/uploads/2021/12/cropped-sportphotobooth-B.png" width="200px"
+         alt="Logo">
+    <p>Welcome to the online QR photo booth! Click the button below to take a picture.</p>
+    <label for="Name"></label><input type="text" id="Name" placeholder="Name"><br>
+    <label>PAC</label>
+    <label for="PAC"></label><input type="number" id="PAC" placeholder="PAC" maxlength="2" max="99" value="99" min="0">
+    <label>SHO</label>
+    <label for="SHO"></label><input type="number" id="SHO" placeholder="SHO" maxlength="2" max="99" value="99" min="0">
+    <label for="PAS"></label><input type="number" id="PAS" placeholder="PAS" maxlength="2" max="99" value="99" min="0">
+    <label for="DRI"></label><input type="number" id="DRI" placeholder="DRI" maxlength="2" max="99" value="99" min="0">
+    <label for="DEF"></label><input type="number" id="DEF" placeholder="DEF" maxlength="2" max="99" value="99" min="0">
+    <label for="PHY"></label><input type="number" id="PHY" placeholder="PHY" maxlength="2" max="99" value="99" min="0">
+    <input type="file" id="fileInput">
+    <button id="uploadButton">Upload File</button>
+    <div id="loading" class="loading">Uploading... Please wait.</div>
+    <div id="response"></div>
+</div>
+<div>
+    <a id="downloadButton" download="composite_image.png">Download Image</a>
+    <canvas id="canvasContainer" width="1080px" height="1080px"></canvas>
+</div>
+
+<script>
+  document.getElementById('uploadButton').addEventListener('click', function () {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (file) {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('response').textContent = '';
+
+      const downloadButton = document.getElementById('downloadButton');
+      downloadButton.style.display = 'none';
+
+      const canvas = document.getElementById('canvasContainer');
+      const ctx = canvas.getContext('2d');
+      canvas.style.display = 'none';
+
+      const xhr = new XMLHttpRequest();
+      const preview = true;
+      xhr.open('POST', API_ENDPOINT + '?mattingType=6&preview=' + preview, true);
+
+      xhr.setRequestHeader('APIKEY', API_KEY);
+
+      xhr.responseType = 'blob';
+
+      xhr.onload = function () {
+        document.getElementById('loading').style.display = 'none';
+
+        if (xhr.status === 200) {
+          const blob = xhr.response;
+          const url = window.URL.createObjectURL(blob);
+
+          const img = new Image();
+          img.onload = function () {
+            document.getElementById('response').textContent = 'Upload successful';
+
+            // Display the composite image on the canvas
+            const Name = document.getElementById('Name').value;
+            const PAC = document.getElementById('PAC').value;
+            const SHO = document.getElementById('SHO').value;
+            const PAS = document.getElementById('PAS').value;
+            const DRI = document.getElementById('DRI').value;
+            const DEF = document.getElementById('DEF').value;
+            const PHY = document.getElementById('PHY').value;
+
+            const overlay = new Image();
+            overlay.src = 'overlay.png'; // Replace with the path to your overlay image
+            overlay.onload = function () {
+              ctx.drawImage(overlay, 0, 0, 1080, 1080);
+              ctx.drawImage(img, 380, 250, 400, 400); // Dan de geüploade afbeelding
+              ctx.font = "50px Arial";
+              ctx.font = "bold 50px Arial";  // Dit maakt de tekst vetgedrukt
+              ctx.textAlign = "center";
+
+              ctx.fillText(`${Name}`, 540, 750);
+              ctx.textAlign = "center";
+
+              // Voor PAC
+              ctx.font = "bold 30px Arial";
+              ctx.fillText("PAC", 295, 825);
+              ctx.font = "30px Arial";
+              ctx.fillText(`${PAC}`, 295, 855);
+
+              // Voor SHO
+              ctx.font = "bold 30px Arial";
+              ctx.fillText("SHO", 375, 825);
+              ctx.font = "30px Arial";
+              ctx.fillText(`${SHO}`, 375, 855);
+
+              // Voor PAS
+              ctx.font = "bold 30px Arial";
+              ctx.fillText("PAS", 475, 825);
+              ctx.font = "30px Arial";
+              ctx.fillText(`${PAS}`, 475, 855);
+
+              // Voor DRI
+              ctx.font = "bold 30px Arial";
+              ctx.fillText("DRI", 575, 825);
+              ctx.font = "30px Arial";
+              ctx.fillText(`${DRI}`, 575, 855);
+
+              // Voor DEF
+              ctx.font = "bold 30px Arial";
+              ctx.fillText("DEF", 675, 825);
+              ctx.font = "30px Arial";
+              ctx.fillText(`${DEF}`, 675, 855);
+
+              // Voor PHY
+              ctx.font = "bold 30px Arial";
+              ctx.fillText("PHY", 775, 825);
+              ctx.font = "30px Arial";
+              ctx.fillText(`${PHY}`, 775, 855);
+
+              downloadButton.href = canvas.toDataURL('image/png');
+              downloadButton.style.display = 'block';
+              canvas.style.display = 'block';
+            };
+
+          };
+          img.src = url;
+        } else {
+          document.getElementById('response').textContent = 'Upload failed';
+        }
+      };
+
+      xhr.send(formData);
+    } else {
+      alert('Please select a file to upload.');
+    }
+  });
+</script>
+</body>
+</html>
